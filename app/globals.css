@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* The builder's root element sets `min-height: 100%`, which only resolves
+   against an ancestor with a real height. Without this the paper background
+   stops at the end of the content. */
+html,
+body {
+  height: 100%;
+}
