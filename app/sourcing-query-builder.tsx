@@ -29,9 +29,15 @@ const C = {
   amberSoft: "#F7EFDD",
 };
 
-const EXAMPLE = `Senior Software Development Engineer, backend. Distributed systems at scale, ownership of a service handling millions of requests per day. Strong in Go or Rust, plus deep systems fundamentals (concurrency, consistency, fault tolerance). 6+ years building and operating production services. Bonus: open-source contributions, conference talks, or a track record scaling a system through a major growth phase. Fully remote, US.`;
+const EXAMPLE = `Senior Machine Learning Engineer, LLM systems. Owns training and inference infrastructure for large models at scale, distributed training, GPU/CUDA performance, latency and cost of production inference. Strong in PyTorch plus systems fundamentals. 6+ years shipping ML to production. Bonus: first-author papers or arXiv preprints, open-source model or framework contributions, conference talks (NeurIPS, ICML, MLSys). Fully remote, US.`;
 
-const PLATFORMS = ["LinkedIn Recruiter", "GitHub", "Stack Overflow"];
+// Only LinkedIn Recruiter gates real output (the Boolean string). X-ray venues
+// are chosen by the model from the brief's discipline, per the SYSTEM Rules.
+const PLATFORMS = ["LinkedIn Recruiter"];
+
+// basePath is not applied to fetch() — only to next/link, router, and
+// next/image. Keep this in sync with basePath in next.config.ts.
+const BASE_PATH = "/tools/sourcing-query-builder/app";
 
 export default function SourcingQueryBuilder() {
   const [brief, setBrief] = useState("");
@@ -68,13 +74,21 @@ export default function SourcingQueryBuilder() {
     setResult(null);
 
     try {
-      const res = await fetch("/api/sourcing", {
+      const res = await fetch(`${BASE_PATH}/api/sourcing`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ brief: brief.trim(), platforms }),
       });
       const data: SourcingResponse = await res.json();
-      if (!res.ok || "error" in data) throw new Error("request failed");
+      if (!res.ok || "error" in data) {
+        // Surface the server's plain message (e.g. the 429 rate-limit text)
+        // when present; otherwise fall back to the generic line.
+        setError(
+          ("error" in data && data.error) ||
+            "The generator could not complete that request. Try again, or tighten the brief to a single role.",
+        );
+        return;
+      }
       setResult(data);
     } catch {
       setError(
@@ -104,11 +118,12 @@ export default function SourcingQueryBuilder() {
               <Terminal size={14} /> Sourcing Intelligence
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold mt-2 leading-tight">
-              Senior SDE Sourcing Query Builder
+              Technical Sourcing Query Builder
             </h1>
             <p className="mt-2 text-sm max-w-2xl" style={{ color: C.steel }}>
-              Describe the role in plain language. Get runnable GitHub and Stack
-              Overflow X-ray searches that reach senior engineers off LinkedIn,
+              Describe the role in plain language, whether software, AI/ML,
+              cloud, or security. Get runnable X-ray searches that reach senior
+              engineers off LinkedIn on the venues that fit the discipline, plus
               an ideal-candidate profile, a screening rubric, and a LinkedIn
               Boolean string.
             </p>
@@ -143,7 +158,7 @@ export default function SourcingQueryBuilder() {
             <textarea
               value={brief}
               onChange={(e) => setBrief(e.target.value)}
-              placeholder="Senior backend SDE, distributed systems, Go or Rust, 6+ years, has scaled a service past millions of requests..."
+              placeholder="Senior ML engineer, LLM inference at scale, PyTorch and CUDA, 6+ years, has shipped models to production..."
               rows={5}
               className="mt-2 w-full text-sm rounded-md p-3 outline-none resize-y"
               style={{
@@ -155,12 +170,6 @@ export default function SourcingQueryBuilder() {
 
             <div className="mt-3 flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2 flex-wrap">
-                <span
-                  className="text-xs font-semibold uppercase tracking-wide"
-                  style={{ color: C.steel }}
-                >
-                  Platforms
-                </span>
                 {PLATFORMS.map((p) => {
                   const on = platforms.includes(p);
                   return (
