@@ -208,7 +208,7 @@ export default function SourcingQueryBuilder() {
               ) : (
                 <Zap size={16} />
               )}
-              {loading ? "Building sourcing kit..." : "Generate sourcing kit"}
+              {loading ? "Building Sourcing Kit..." : "Generate Sourcing Kit"}
             </button>
 
             {error && (
